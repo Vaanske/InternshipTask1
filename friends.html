@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Check out your friends!</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div id="res"></div>
+        <script src="jquery-3.3.1.js"> </script>
+        <script> 
+            divRes=document.querySelector("#res");
+      //filter for Friends of friends task,returns only elements that are not in both arrays
+            Array.prototype.diff = function(a) {
+           return this.filter(function(i) {return !(a.indexOf(i) > -1);});
+};
+    //filter for Suggested friends task, returns only elements that are in both arrays
+      Array.prototype.same = function(a) {
+           return this.filter(function(i) {return !(a.indexOf(i) < 1);});
+};
+            divRes.innerHTML+= `<h1> Click on people below to see their friends! </h1>`;
+            // Inital function for all tasks
+            function friend(element){
+                var Name=element.innerHTML; // Taking the value of a paragraph
+                var Name1= Name.split(" "); // Spliting Value for Name and Surname
+                var a= new Array(); // Array for friends of a person selected
+                var b=new Array();  // Array for friends of friends person selected
+                var id; // Variable used to deny any double outputs
+                divRes.innerHTML="";
+                divRes.innerHTML=`<h2> ${Name} has friends: </h2>`;
+              $.get("data.json", function (response) {
+                  var n=response.length;
+                   for (let i=0;i<n;i++){
+                       if ((Name1[1]==response[i].firstName) && (Name1[2]==response[i].surname)) 
+                       {
+                           a=response[i].friends;
+                           id=response[i].id; 
+                       }
+                   }
+                   // Adding all friends of person selected aswell as filling array b with friends of friends
+                   for (let j=0;j<a.length;j++) {
+                       for (let i=0;i<n;i++){
+                           if (a[j]==response[i].id)
+                           {
+                               b=b.concat(response[i].friends);
+                               divRes.innerHTML+= `<p> ${response[i].firstName} ${response[i].surname} </p>`;
+                       }
+                   }
+                   }
+                   divRes.innerHTML+= `<br> <h2> Friends of friends that the person is not connected to: </h2>`;
+                   var ub=Array.from(new Set(b)); //Array without duplicates in b
+                   var c=new Array();
+                   ub=ub.concat(a);  //Merging ub and a arrays in order to search all the friends of friends 
+                   c=Array.from(new Set(ub)); //Array without duplicates in ub
+                   var x=a.diff(c);  //Calling diff function,return is Array with elements in a array that are not in c array
+                   var y=c.diff(a);  //Calling diff function,return is Array with elements in c array that are not in a array
+                   var z=x.concat(y); // Merging 2 arrays from above into one
+                  for (let i=0;i<response.length;i++) {
+                       if (response[i].id!=id)
+                       {
+                           for (let q=0;q<z.length;q++)
+                           {
+                              if (z[q]==response[i].id) divRes.innerHTML+= `<p> ${response[i].firstName} ${response[i].surname} </p>`;
+                           }
+                       }         
+                   }
+                   // Initializing arrays for Suggested friends task
+                   var arr1=new Array();
+                   var arr2=new Array();
+                   var arr3=new Array();
+                   var arr4=new Array();
+                divRes.innerHTML+= ` <br> <h2> Suggested friends: </h2>`
+               for (let i=0;i<response.length;i++) {
+                   arr1=response[i].friends;
+                   arr2=arr1.same(a);  // Calling same function, in order to find same arrays in arr1 and a
+                   arr3=a.same(arr1);  // Calling same function, in order to find same arrays in a and arr1 
+                   arr2=arr2.concat(arr3);
+                   arr4=Array.from(new Set(arr2));
+                   console.log(arr1);
+                   console.log(a);
+                   console.log(arr4);
+                   if (arr4.length>=2) {
+                         if (response[i].id!=id){
+                  divRes.innerHTML+=`<p> ${response[i].firstName} ${response[i].surname} </p>`;       
+                   }
+        }
+         }
+              });           
+          }  
+            $.get("data.json", function (response) {
+            for (let i=0;i<response.length;i++)
+            divRes.innerHTML+= `<p id="para" onclick="friend(this)"> ${response[i].firstName} ${response[i].surname} </p>`;
+            console.log(response);
+        }) </script>
+    </body>
+</html>
